@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Devops or not devops.</title>
+    <link>http://localhost:1313/</link>
+    <description>Recent content on Devops or not devops.</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 09 Nov 2015 15:35:40 +0100</lastBuildDate>
+    <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Docker registry installation</title>
+      <link>http://localhost:1313/docker-registry-installation/</link>
+      <pubDate>Mon, 09 Nov 2015 15:35:40 +0100</pubDate>
+      
+      <guid>http://localhost:1313/docker-registry-installation/</guid>
+      <description>
+
+&lt;h1 id=&#34;d-incubator-registry:c34b9d8e1a9d73777d6418bc254d4972&#34;&gt;D-Incubator Registry&lt;/h1&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Or how to have our docker registry hub locally
+Due to the slow network here, we need to find a way to download docker images form local network instead of Docker Hub.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&#34;installation:c34b9d8e1a9d73777d6418bc254d4972&#34;&gt;Installation&lt;/h2&gt;
+
+&lt;p&gt;Docker offer his registry as a docker image&lt;/p&gt;
+
+&lt;p&gt;To start a registry, latest version, simply run&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;&amp;gt; docker run -p 5000:5000 --name registry registry:2
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It will run, but will not persist data when the container will stopped.
+So a docker-compose configuration exist to run the registry persistence.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Caching through Redis is in place but not enabled actually&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Go to ./registry and run&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# Run docker-compose up -d to start all container
+# -d is for running container as daemon
+
+&amp;gt; docker-compose up -d
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;In docker-compose.yml file, update ENV_DOCKER_REGISTRY_HOST with the ip of your docker-machine&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Your own docker registry is now available:
+- repository: on &lt;IP-OF-DOCKER&gt;:5000
+- UI: on &lt;IP-OF-DOCKER&gt;:5080&lt;/p&gt;
+
+&lt;h2 id=&#34;make-it-available-on-network:c34b9d8e1a9d73777d6418bc254d4972&#34;&gt;Make it available on network&lt;/h2&gt;
+
+&lt;p&gt;You need to open the vm port 5080 and 5000 to put your registry on the network&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# use VBoxManage controlvm &amp;lt;VM-NAME&amp;gt; natpf1 &amp;lt;RULE-NAME&amp;gt;,tcp,&amp;lt;INTERFACE IP&amp;gt;,&amp;lt;VM-PORT-TO-OPEN&amp;gt;,,&amp;lt;DOCKER-PORT-TO-MAP&amp;gt;
+# Here, we are creating a rule registry in vm registry, mapping the docker port 5000 to the vm port 5000 on every interface
+
+&amp;gt; VBoxManage controlvm registry natpf1 registry,tcp,0.0.0.0,5000,,5000
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now, you access over the network with:
+- repository: on &lt;IP-OF-HOST&gt;:5000
+- UI: on &lt;IP-OF-HOST&gt;:5080&lt;/p&gt;
+
+&lt;h2 id=&#34;push-pull-images-from-to-your-own-repository:c34b9d8e1a9d73777d6418bc254d4972&#34;&gt;Push / Pull images from / to your own repository&lt;/h2&gt;
+
+&lt;h3 id=&#34;allow-connection-to-insecure-registry:c34b9d8e1a9d73777d6418bc254d4972&#34;&gt;Allow connection to insecure registry&lt;/h3&gt;
+
+&lt;p&gt;As the registry is not secure by certificate actually (&lt;em&gt;planned to be done later&lt;/em&gt;),
+we need to tell docker to allow communication with this insecure registry.&lt;/p&gt;
+
+&lt;p&gt;It can be done by adding &lt;code&gt;--insecure-registry=&amp;lt;IP-OF-REGISTRY&amp;gt;:&amp;lt;PORT-OF-REGISTRY&amp;gt;&lt;/code&gt; in the boot2docker profile.&lt;/p&gt;
+
+&lt;p&gt;So,&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# SSH your docker-machine
+# docker-machine ssh &amp;lt;DOCKER-MACHINE-NAME&amp;gt;
+&amp;gt; docker-machine ssh registry
+
+# Open in vi the boot2docker profile.
+# profile is the configuration file used by docker when it start in boot2docker
+&amp;gt; sudo vi /var/lib/boot2docker/profile
+
+# Add line &#39;--insecure-registry docker-registry:5000&#39; in **EXTRA_ARGS**
+EXTRA_ARGS=&#39;
+--label provider=virtualbox
+--insecure-registry docker-registry:5000
+&#39;
+
+# quit vi with :wq to save file
+
+# Add docker-registry as resolved name in /etc/hosts
+&amp;gt; sudo vi /etc/hosts
+&amp;lt;IP OF Registry&amp;gt; docker-registry
+# quit vi with :wq to save file
+
+# Restart docker
+&amp;gt; sudo /etc/init.d/docker restart
+
+
+
+# Sometimes, docker run out of his mind when restarting
+# You can see it in log, with last line as
+&amp;gt; tail -f /var/log/docker.log
+level=fatal msg=&amp;quot;Shutting down due to ServeAPI error: listen tcp 0.0.0.0:2376: bind: address already in use&amp;quot;
+
+# If you see that, just kill docker and start it again
+&amp;gt; sudo killall -9 docker
+&amp;gt; sudo /etc/init.d/docker start
+
+# you will see now
+&amp;gt; tail -f /var/log/docker.log
+level=info msg=&amp;quot;Daemon has completed initialization&amp;quot;
+level=info msg=&amp;quot;Docker daemon&amp;quot; commit=f4bf5c7 execdriver=native-0.2 graphdriver=aufs version=1.8.3
+
+# Quit docker machine by CTRL-D
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;push-image:c34b9d8e1a9d73777d6418bc254d4972&#34;&gt;Push image&lt;/h3&gt;
+
+&lt;p&gt;Now, to &lt;strong&gt;push&lt;/strong&gt; images from your own repo, you have to tag your image with the repo url in it&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# docker tag &amp;lt;IMAGE-NAME:?tag&amp;gt; &amp;lt;REGISTRY-IP&amp;gt;:&amp;lt;PORT&amp;gt;/&amp;lt;IMAGE-NAME:?tag&amp;gt;
+&amp;gt; docker tag registry docker-registry:5000/registry
+
+# In D-Incubator, we have our repository as d.incubator/&amp;lt;IMAGE-NAME:?tag&amp;gt;
+&amp;gt; docker tag jenkins-swarm-slave docker-registry:5000/d.incubator/jenkins-swarm-slave
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now you can push it&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# docker push &amp;lt;TAG-WITH-REPO-URL&amp;gt;
+&amp;gt; docker push docker-registry:5000/registry
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;pull-image:c34b9d8e1a9d73777d6418bc254d4972&#34;&gt;Pull image&lt;/h3&gt;
+
+&lt;p&gt;To &lt;strong&gt;pull&lt;/strong&gt; images from your own repo, you have to pull with the repo url in it&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# docker pull &amp;lt;REGISTRY-IP&amp;gt;:&amp;lt;PORT&amp;gt;/&amp;lt;IMAGE-NAME:?tag&amp;gt;
+&amp;gt; docker pull docker-registry:5000/d.incubator/jenkins-swarm-slave
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;backup-restore:c34b9d8e1a9d73777d6418bc254d4972&#34;&gt;Backup &amp;amp; Restore&lt;/h2&gt;
+
+&lt;h3 id=&#34;backup-registry-data:c34b9d8e1a9d73777d6418bc254d4972&#34;&gt;Backup registry data&lt;/h3&gt;
+
+&lt;p&gt;As we have create a &lt;a href=&#34;http://docs.docker.com/engine/userguide/dockervolumes/&#34;&gt;Data Volume Container&lt;/a&gt;, we can backup the folder where the registry save its data to a tar file easily.&lt;/p&gt;
+
+&lt;p&gt;We will run a new container and mount volumes from registry data container, and mount the local folder to &lt;code&gt;/backup&lt;/code&gt;in the container. Then, we will compress the registry data to a tarball.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;&amp;gt; docker run --volumes-from registry_storage_1 -v $(pwd):/backup ubuntu sh -c &amp;quot;cd /var/lib/registry &amp;amp;&amp;amp; tar cvf /backup/registry-data.tar .&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You have now a file &lt;code&gt;registry-data.tar&lt;/code&gt; in your local folder.&lt;/p&gt;
+
+&lt;h3 id=&#34;restore-registry-data:c34b9d8e1a9d73777d6418bc254d4972&#34;&gt;Restore registry data&lt;/h3&gt;
+
+&lt;p&gt;If you want to restore the previously backuped registry data to a new registry data container.&lt;/p&gt;
+
+&lt;p&gt;So after running the docker-compose, you will have a registry data container but it will be empty. Then, you will have to uncompress the &lt;code&gt;registry-data.tar&lt;/code&gt; in the corresponding directory in the registry data container.&lt;/p&gt;
+
+&lt;p&gt;We will run a new container and mount volumes from registry data container, and mount the local folder to &lt;code&gt;/backup&lt;/code&gt;in the container. Then, we will decompress the registry data to the registry data folder.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;&amp;gt; docker run --volumes-from registry_storage_1 -v $(pwd):/backup ubuntu sh -c &amp;quot;cd /var/lib/registry &amp;amp;&amp;amp; tar xvf /backup/registry-data.tar&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;New, you will can check your repository UI url, your backuped images are restored.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Install Docker on OSX</title>
+      <link>http://localhost:1313/docker-install-osx/</link>
+      <pubDate>Mon, 09 Nov 2015 09:50:57 +0100</pubDate>
+      
+      <guid>http://localhost:1313/docker-install-osx/</guid>
+      <description>&lt;p&gt;The easier way to install Docker is with the &lt;a href=&#34;https://www.docker.com/docker-toolbox&#34;&gt;Docker Toolbox&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Docker toolbox install:
+ - Docker Client
+ - Docker Machine
+ - Docker Compose
+ - Docker Kitematic
+ - VirtualBox&lt;/p&gt;
+
+&lt;p&gt;You can run a Docker terminal with the VM boot2docker started and environment variable configured by running &lt;strong&gt;Docker Quickstart Terminal&lt;/strong&gt; app.&lt;/p&gt;
+
+&lt;p&gt;Or you can run it by yourself with &lt;strong&gt;Docker Machine&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# List Docker Machine available
+
+&amp;gt; docker-machine ls
+NAME            ACTIVE   DRIVER       STATE     URL                         SWARM
+default                  virtualbox   Running   tcp://192.168.99.101:2376
+
+# To start a docker machine akka VM
+# &amp;gt; docker-machine start &amp;lt;DOCKER-MACHINE-NAME&amp;gt;
+&amp;gt; docker-machine start default
+
+# To create a new docker machine
+# docker-machine create --driver=&amp;lt;VM-DRIVER&amp;gt; &amp;lt;NAME-OF-VM&amp;gt;
+# --driver=virtualbox is use in OSX to run with boot2docker
+&amp;gt; docker-machine create --driver=virtualbox registry
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To allow your docker-client to speak with your docker daemon inside your docker machine &lt;em&gt;you follow me, right?&lt;/em&gt;, you need to configure some &lt;strong&gt;environment variables&lt;/strong&gt; like &lt;code&gt;DOCKER_HOST=&amp;lt;IP-OF-VM&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;docker-machine help you on that with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;&amp;gt; eval $(docker-machine env virtual-slave)
+
+# If you want to run connect to your vm with a specific shell you can use --shell=&amp;lt;SHELL-NAME&amp;gt;
+
+&amp;gt; eval $(docker-machine env virtual-slave --shell=zsh)
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
