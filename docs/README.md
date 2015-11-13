@@ -13,16 +13,16 @@ docker run -d --hostname jenkins_swarm_slave_nodejs_1 --name jenkins_swarm_slave
 # Run Jenkins Swarm slave for dind
 ```bash
 docker run -d \
-  --hostname jenkins_swarm_slave_dind_1 \
-  --name jenkins_swarm_slave_dind_1 \
-  -e JENKINS_SERVER=10.213.230.9 \
-  -e JENKINS_PORT=8888 \
-  -e JENKINS_LABELS=swarm-dind \
+  --hostname jenkins_swarm_slave_1 \
+  --name jenkins_swarm_slave_1 \
+  -e JENKINS_SERVER=192.168.99.104 \
+  -e JENKINS_PORT=80 \
+  -e JENKINS_LABELS=swarm \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v /usr/local/bin/docker:/bin/docker \
   -v /tmp:/tmp \
   -v /usr/share/jenkins_slave:/usr/share/jenkins_slave \
-  docker-registry:5000/d.incubator/jenkins-swarm-slave
+  jenkinsslave_swarmslave
 ```
 
 # Error with docker-compose
