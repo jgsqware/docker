@@ -1,15 +1,15 @@
 data:
-  image: docker-registry:5000/d.incubator/jenkins-data
+  build: jenkins-data
 
 master:
-  image: docker-registry:5000/d.incubator/jenkins-master
+  build: jenkins-master
   ports:
     - "50000:50000"
   volumes_from:
     - data
 
 nginx:
-  image: docker-registry:5000/d.incubator/jenkins-nginx
+  build: jenkins-nginx
   ports:
     - "80:80"
   links:

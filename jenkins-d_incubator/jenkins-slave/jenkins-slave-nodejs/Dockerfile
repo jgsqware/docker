@@ -1,4 +1,4 @@
-FROM node:0.12
+FROM docker-registry:5000/node:0.12
 MAINTAINER Julien Garcia Gonzalez <jgonzalez@wemanity.com>
 
 RUN groupadd -g 1000 jenkins_slave

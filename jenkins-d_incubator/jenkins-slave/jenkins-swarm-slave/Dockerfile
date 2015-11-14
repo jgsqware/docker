@@ -1,4 +1,4 @@
-FROM develar/java
+FROM docker-registry:5000/develar/java:8-JRE-alpine
 MAINTAINER Julien Garcia Gonzalez <jgonzalez@wemanity.com>
 RUN apk add --update \
               bash \

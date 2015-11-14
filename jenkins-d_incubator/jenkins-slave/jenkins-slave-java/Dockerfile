@@ -1,4 +1,4 @@
-FROM frolvlad/alpine-oraclejdk8
+FROM docker-registry:5000/frolvlad/java:8-jdk-alpine
 MAINTAINER Julien Garcia Gonzalez <jgonzalez@wemanity.com>
 
 RUN adduser -h "/home/jenkins_slave" -u 1000 -s /bin/bash -D jenkins_slave
