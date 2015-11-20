@@ -3,7 +3,7 @@
   <installations class="org.jenkinsci.plugins.docker.commons.tools.DockerTool-array">
     <org.jenkinsci.plugins.docker.commons.tools.DockerTool>
       <name>docker</name>
-      <home>/bin/docker</home>
+      <home></home>
       <properties/>
     </org.jenkinsci.plugins.docker.commons.tools.DockerTool>
   </installations>
