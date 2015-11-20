@@ -1,0 +1,8 @@
+restore:
+  build: .
+  environment:
+    - PGPASSWORD=sonar
+  # entrypoint: ash
+  command: ["-h","db","-U","sonar","-f","/data/sonar_db_backup.sql"]
+  volumes:
+    - .:/data
