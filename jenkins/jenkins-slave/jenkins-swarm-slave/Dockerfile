@@ -1,10 +1,16 @@
-FROM develar/java
+# FROM develar/java
+# MAINTAINER Julien Garcia Gonzalez <jgonzalez@wemanity.com>
+# RUN apk add --update \
+#               bash \
+#               git \
+#               && rm -rf /var/cache/apk/*
+FROM java:jre
 MAINTAINER Julien Garcia Gonzalez <jgonzalez@wemanity.com>
-RUN apk add --update \
-              bash \
-              git \
-              && rm -rf /var/cache/apk/*
-RUN adduser -h "/home/jenkins_slave" -u 1000 -s /bin/bash -D jenkins_slave
+RUN apt-get update && \
+    apt-get install -y git bash lxc libltdl7 && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN useradd -d "/home/jenkins_slave" -u 1000 -m -s /bin/bash jenkins_slave
 
 RUN wget -O /home/jenkins_slave/swarm-client-2.0-jar-with-dependencies.jar http://maven.jenkins-ci.org/content/repositories/releases/org/jenkins-ci/plugins/swarm-client/2.0/swarm-client-2.0-jar-with-dependencies.jar
 
