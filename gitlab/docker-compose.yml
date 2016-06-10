@@ -1,0 +1,19 @@
+server:
+  image: gitlab/gitlab-ce
+  hostname: gitlab.example.com
+  ports:
+    - "9443:433"
+    - "9080:80"
+    - "9022:22"
+  restart: always
+#   volumes_from:
+#     - data
+#   net: jenkins-network
+#
+# data:
+#   image: tianon/true
+#   volumes:
+#     - /etc/gitlab
+#     - /var/log/gitlab
+#     - /var/opt/gitlab
+#   command: "/true"

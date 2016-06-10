@@ -1,6 +1,6 @@
 #!/bin/bash
-HOST_IP=$(ip route | grep ^default | awk '{print $3}')
-JENKINS_SERVER=${JENKINS_SERVER:-$HOST_IP}
+DOCKER_HOST=$(getent hosts jenkins-master | awk '{ print $1 }')
+JENKINS_SERVER=${JENKINS_SERVER:-$DOCKER_HOST}
 JENKINS_PORT=${JENKINS_PORT:-8080}
 JENKINS_LABELS=${JENKINS_LABELS:-swarm}
 JENKINS_HOME=${JENKINS_HOME:-$HOME}

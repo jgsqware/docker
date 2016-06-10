@@ -15,7 +15,6 @@ backend:
     - 5000:5000
   links:
     - cache
-    - storage
   volumes_from:
     - storage
   environment:

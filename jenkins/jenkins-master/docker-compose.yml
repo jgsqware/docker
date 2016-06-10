@@ -5,12 +5,13 @@ master:
   build: jenkins-master
   ports:
     - "50000:50000"
+    - "8888:8080"
   volumes_from:
     - data
+  net: jenkins-network
 
-nginx:
-  build: jenkins-nginx
-  ports:
-    - "80:80"
-  links:
-    - master:jenkins-master
+# nginx:
+#   build: jenkins-nginx
+#   ports:
+#     - "10080:80"
+#   net: jenkins-network
